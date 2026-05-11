@@ -1,61 +1,37 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven'
-        jdk 'JDK21'
-    }
-
     stages {
-
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/chayakruthi/email.git',
+                // Pulls your code from GitHub
+                git branch: 'main', 
+                    url: 'https://github.com/chayakruthi/email.git', 
                     credentialsId: 'github-token'
             }
         }
 
-        stage('Build') {
+        stage('Verify Content') {
             steps {
-                sh 'mvn clean compile'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh 'mvn package'
-            }
-        }
-
-        stage('Run Application') {
-            steps {
-                sh 'mvn exec:java -Dexec.mainClass="com.example.app.App"'
+                // This lists your files in the log so you can see what's actually there
+                sh 'ls -la'
+                echo "This is not a Maven project, so we are just verifying files."
             }
         }
     }
 
-    
     post {
-
         success {
             emailext (
-                subject: "SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}",
-                body: "Build succeeded!\nCheck: ${BUILD_URL}",
+                subject: "SUCCESS: ${JOB_NAME} [Build #${BUILD_NUMBER}]",
+                body: "The files were checked out successfully. View build: ${BUILD_URL}",
                 to: "cmchaya37@gmail.com"
             )
         }
-
         failure {
             emailext (
-                subject: "FAILED: ${JOB_NAME} #${BUILD_NUMBER}",
-                body: "Build failed!\nCheck: ${BUILD_URL}",
+                subject: "FAILED: ${JOB_NAME} [Build #${BUILD_NUMBER}]",
+                body: "Something went wrong. Check the logs: ${BUILD_URL}",
                 to: "cmchaya37@gmail.com"
             )
         }
